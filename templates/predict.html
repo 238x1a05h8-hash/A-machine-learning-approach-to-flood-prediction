@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Predict – Rising Waters</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+</head>
+<body class="page-predict">
+
+<!-- ── NAV ─────────────────────────────────────────────────────── -->
+<nav class="nav">
+  <div class="nav-brand">
+    <a href="{{ url_for('home') }}" style="display:flex;align-items:center;gap:.5rem;text-decoration:none;color:inherit">
+      <span class="wave-icon">🌊</span>
+      <span>Rising<strong>Waters</strong></span>
+    </a>
+  </div>
+  <ul class="nav-links">
+    <li><a href="{{ url_for('home') }}">Home</a></li>
+    <li><a href="{{ url_for('predict') }}" class="active">Predict</a></li>
+    <li><a href="{{ url_for('about') }}">About</a></li>
+  </ul>
+  <a href="{{ url_for('predict') }}" class="nav-cta">Start Prediction →</a>
+</nav>
+
+<!-- ── FLASH MESSAGES ───────────────────────────────────────────── -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="flash-container">
+      {% for cat, msg in messages %}
+        <div class="flash flash-{{ cat }}">⚠️ {{ msg }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+<!-- ── PREDICT CONTENT ──────────────────────────────────────────── -->
+<main class="predict-main">
+  <div class="predict-header">
+    <p class="section-tag">FLOOD RISK ASSESSMENT</p>
+    <h1>Enter Environmental Data</h1>
+    <p class="predict-sub">Provide current meteorological readings for your region. All fields are required.</p>
+  </div>
+
+  <div class="predict-layout">
+    <!-- Form -->
+    <div class="form-card">
+      <form action="{{ url_for('prediction') }}" method="POST" id="predictForm">
+
+        <div class="form-grid">
+
+          <!-- Annual Rainfall -->
+          <div class="form-group">
+            <label for="Annual_Rainfall">
+              <span class="label-icon">🌧️</span> Annual Rainfall
+              <span class="label-unit">mm</span>
+            </label>
+            <div class="input-wrap">
+              <input type="number" step="0.1" min="0" max="5000"
+                     id="Annual_Rainfall" name="Annual_Rainfall"
+                     placeholder="e.g. 1200"
+                     value="{{ request.form.get('Annual_Rainfall', '') }}" />
+              <span class="input-range">0 – 5000 mm</span>
+            </div>
+          </div>
+
+          <!-- Seasonal Rainfall -->
+          <div class="form-group">
+            <label for="Seasonal_Rainfall">
+              <span class="label-icon">⛈️</span> Seasonal Rainfall <em>(Jun–Sep)</em>
+              <span class="label-unit">mm</span>
+            </label>
+            <div class="input-wrap">
+              <input type="number" step="0.1" min="0" max="3000"
+                     id="Seasonal_Rainfall" name="Seasonal_Rainfall"
+                     placeholder="e.g. 800"
+                     value="{{ request.form.get('Seasonal_Rainfall', '') }}" />
+              <span class="input-range">0 – 3000 mm</span>
+            </div>
+          </div>
+
+          <!-- Temperature -->
+          <div class="form-group">
+            <label for="Temperature">
+              <span class="label-icon">🌡️</span> Average Temperature
+              <span class="label-unit">°C</span>
+            </label>
+            <div class="input-wrap">
+              <input type="number" step="0.1" min="-10" max="60"
+                     id="Temperature" name="Temperature"
+                     placeholder="e.g. 28"
+                     value="{{ request.form.get('Temperature', '') }}" />
+              <span class="input-range">−10 – 60 °C</span>
+            </div>
+          </div>
+
+          <!-- Cloud Cover -->
+          <div class="form-group">
+            <label for="Cloud_Cover">
+              <span class="label-icon">☁️</span> Cloud Cover
+              <span class="label-unit">%</span>
+            </label>
+            <div class="input-wrap">
+              <input type="number" step="0.1" min="0" max="100"
+                     id="Cloud_Cover" name="Cloud_Cover"
+                     placeholder="e.g. 75"
+                     value="{{ request.form.get('Cloud_Cover', '') }}" />
+              <span class="input-range">0 – 100 %</span>
+            </div>
+          </div>
+
+          <!-- Humidity -->
+          <div class="form-group span-full">
+            <label for="Humidity">
+              <span class="label-icon">💧</span> Relative Humidity
+              <span class="label-unit">%</span>
+            </label>
+            <div class="input-wrap">
+              <input type="number" step="0.1" min="0" max="100"
+                     id="Humidity" name="Humidity"
+                     placeholder="e.g. 85"
+                     value="{{ request.form.get('Humidity', '') }}" />
+              <span class="input-range">0 – 100 %</span>
+            </div>
+          </div>
+
+        </div><!-- /form-grid -->
+
+        <button type="submit" class="btn-primary submit-btn" id="submitBtn">
+          <span id="btnText">Analyse &amp; Predict</span>
+          <span id="btnLoader" class="loader hidden"></span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+
+      </form>
+    </div>
+
+    <!-- Sidebar info -->
+    <aside class="predict-sidebar">
+      <div class="info-card">
+        <h4>📌 Feature Guide</h4>
+        <ul>
+          <li><strong>Annual Rainfall:</strong> Total yearly precipitation in mm</li>
+          <li><strong>Seasonal Rainfall:</strong> Monsoon months (Jun–Sep) total</li>
+          <li><strong>Temperature:</strong> Mean ambient temperature in °C</li>
+          <li><strong>Cloud Cover:</strong> Sky coverage percentage</li>
+          <li><strong>Humidity:</strong> Relative humidity (%)</li>
+        </ul>
+      </div>
+      <div class="info-card model-info-card">
+        <h4>🏆 Active Model</h4>
+        <p>Best-performing classifier selected automatically from:</p>
+        <ul class="model-list">
+          <li>✅ Random Forest</li>
+          <li>✅ XGBoost</li>
+          <li>✅ K-Nearest Neighbors</li>
+          <li>✅ Decision Tree</li>
+        </ul>
+      </div>
+    </aside>
+
+  </div><!-- /predict-layout -->
+</main>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">🌊 Rising<strong>Waters</strong></div>
+    <p class="footer-copy">ML-Based Flood Prediction System · Built with Flask &amp; Scikit-learn</p>
+    <div class="footer-links">
+      <a href="{{ url_for('home') }}">Home</a>
+      <a href="{{ url_for('predict') }}">Predict</a>
+      <a href="{{ url_for('about') }}">About</a>
+    </div>
+  </div>
+</footer>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>
